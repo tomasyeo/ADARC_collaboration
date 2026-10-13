@@ -19,16 +19,31 @@ PYTHON = ROOT / ".venv" / "bin" / "python"
 HOST = "127.0.0.1"
 
 
+class ProcessInspectionError(RuntimeError):
+    """The wrapper cannot safely identify its managed process."""
+
+
+def ps(pid: int, field: str) -> str | None:
+    try:
+        result = subprocess.run(
+            ["ps", "-p", str(pid), "-o", f"{field}="],
+            capture_output=True, text=True, check=False,
+        )
+    except OSError as exc:
+        raise ProcessInspectionError(f"Cannot inspect local processes: {exc}") from exc
+    if result.returncode != 0:
+        if result.stderr.strip():
+            raise ProcessInspectionError(f"Cannot inspect local processes: {result.stderr.strip()}")
+        return None
+    return result.stdout.strip()
+
+
 def paths(port: int) -> tuple[Path, Path]:
     return RUNTIME / f"streamlit-{port}.json", RUNTIME / f"streamlit-{port}.log"
 
 
 def process_start(pid: int) -> str | None:
-    result = subprocess.run(
-        ["ps", "-p", str(pid), "-o", "lstart="],
-        capture_output=True, text=True, check=False,
-    )
-    return result.stdout.strip() if result.returncode == 0 else None
+    return ps(pid, "lstart")
 
 
 def managed_process(record: dict, port: int) -> bool:
@@ -37,10 +52,7 @@ def managed_process(record: dict, port: int) -> bool:
         return False
     if process_start(pid) != record.get("started"):
         return False
-    command = subprocess.run(
-        ["ps", "-p", str(pid), "-o", "command="],
-        capture_output=True, text=True, check=False,
-    ).stdout
+    command = ps(pid, "command") or ""
     return str(ROOT / "app.py") in command and f"--server.port {port}" in command
 
 
@@ -59,12 +71,27 @@ def port_open(port: int) -> bool:
         return connection.connect_ex((HOST, port)) == 0
 
 
+def terminate_launch(process: subprocess.Popen) -> None:
+    if process.poll() is not None:
+        return
+    process.terminate()
+    try:
+        process.wait(timeout=3)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait()
+
+
 def start(port: int) -> int:
     state, log = paths(port)
     record = read_record(port)
     if record and managed_process(record, port):
-        print(f"Already running at http://{HOST}:{port}/ (PID {record['pid']}).")
-        return 0
+        if port_open(port):
+            print(f"Already running at http://{HOST}:{port}/ (PID {record['pid']}).")
+            return 0
+        print(f"Managed process {record['pid']} is not responding on port {port}; run ./appctl restart.",
+              file=sys.stderr)
+        return 1
     if port_open(port):
         print(f"Port {port} is in use by a process this wrapper does not manage.", file=sys.stderr)
         return 1
@@ -77,16 +104,30 @@ def start(port: int) -> int:
     command = [str(PYTHON), "-m", "streamlit", "run", str(ROOT / "app.py"),
                "--server.headless", "true", "--server.address", HOST,
                "--server.port", str(port)]
-    with log.open("a", encoding="utf-8") as output:
-        process = subprocess.Popen(command, cwd=ROOT, stdin=subprocess.DEVNULL,
-                                   stdout=output, stderr=subprocess.STDOUT,
-                                   start_new_session=True)
-    started = process_start(process.pid)
+    try:
+        with log.open("a", encoding="utf-8") as output:
+            process = subprocess.Popen(command, cwd=ROOT, stdin=subprocess.DEVNULL,
+                                       stdout=output, stderr=subprocess.STDOUT,
+                                       start_new_session=True)
+    except OSError as exc:
+        print(f"Could not launch Streamlit: {exc}", file=sys.stderr)
+        return 1
+    try:
+        started = process_start(process.pid)
+    except ProcessInspectionError:
+        terminate_launch(process)
+        raise
     if not started:
+        terminate_launch(process)
         print(f"Streamlit exited before its process could be recorded. See {log}.", file=sys.stderr)
         return 1
-    state.write_text(json.dumps({"pid": process.pid, "port": port, "started": started}) + "\n",
-                     encoding="utf-8")
+    try:
+        state.write_text(json.dumps({"pid": process.pid, "port": port, "started": started}) + "\n",
+                         encoding="utf-8")
+    except OSError as exc:
+        terminate_launch(process)
+        print(f"Could not record the Streamlit PID: {exc}", file=sys.stderr)
+        return 1
     for _ in range(40):
         if process.poll() is not None:
             state.unlink(missing_ok=True)
@@ -96,8 +137,8 @@ def start(port: int) -> int:
             print(f"Running at http://{HOST}:{port}/ (PID {process.pid}). Log: {log}")
             return 0
         time.sleep(0.25)
-    print(f"Streamlit is still starting. Check {log} or run status.", file=sys.stderr)
-    return 1
+    print(f"Streamlit is still starting (PID {process.pid}). Check {log} or run status.")
+    return 0
 
 
 def stop(port: int) -> int:
@@ -108,7 +149,15 @@ def stop(port: int) -> int:
         print(f"No managed app is running on port {port}.")
         return 0
     pid = record["pid"]
-    os.kill(pid, 15)
+    try:
+        os.kill(pid, 15)
+    except ProcessLookupError:
+        state.unlink(missing_ok=True)
+        print(f"App on port {port} already stopped.")
+        return 0
+    except PermissionError as exc:
+        print(f"Cannot stop PID {pid}: {exc}", file=sys.stderr)
+        return 1
     for _ in range(40):
         if not managed_process(record, port):
             state.unlink(missing_ok=True)
@@ -123,8 +172,11 @@ def stop(port: int) -> int:
 def status(port: int) -> int:
     record = read_record(port)
     if record and managed_process(record, port):
-        print(f"Running at http://{HOST}:{port}/ (PID {record['pid']}).")
-        return 0
+        if port_open(port):
+            print(f"Running at http://{HOST}:{port}/ (PID {record['pid']}).")
+            return 0
+        print(f"Managed process {record['pid']} is running, but port {port} is not responding.")
+        return 1
     if port_open(port):
         print(f"Port {port} is occupied by an unmanaged process.")
         return 1
@@ -134,18 +186,24 @@ def status(port: int) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("start", "stop", "reset", "status"))
+    parser.add_argument("command", choices=("start", "stop", "restart", "status"))
     parser.add_argument("--port", type=int, default=8501)
     args = parser.parse_args()
     if not 1 <= args.port <= 65535:
         parser.error("--port must be between 1 and 65535")
-    if args.command == "start":
-        return start(args.port)
-    if args.command == "stop":
-        return stop(args.port)
-    if args.command == "status":
-        return status(args.port)
-    return stop(args.port) or start(args.port)
+    try:
+        if process_start(os.getpid()) is None:
+            raise ProcessInspectionError("Cannot inspect the current process.")
+        if args.command == "start":
+            return start(args.port)
+        if args.command == "stop":
+            return stop(args.port)
+        if args.command == "status":
+            return status(args.port)
+        return stop(args.port) or start(args.port)
+    except ProcessInspectionError as exc:
+        print(exc, file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":

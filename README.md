@@ -19,22 +19,21 @@ Use Python 3.11 or newer:
 ```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
-.venv/bin/streamlit run app.py
+./appctl start
 ```
 
-For repeat local runs, use the wrapper after installing dependencies:
+Manage the local app with:
 
 ```sh
-./appctl start            # start on 127.0.0.1:8501
 ./appctl status
-./appctl reset            # stop and start; reload the browser for a fresh session
+./appctl restart          # stop and start; reload the browser for a fresh session
 ./appctl stop
 ```
 
 Pass `--port 8502` to any command to use another port. The wrapper manages only
 processes it started. It writes its PID records and logs under the ignored
-`.run/` directory. If port 8501 is occupied by a manually started server, stop
-that server before using `./appctl start`.
+`.run/` directory. If port 8501 is occupied by another server, stop that server
+before using `./appctl start`.
 
 The prebuilt Cytoscape browser bundles are committed in `frontend/dist/`, so deployment only needs the Python dependencies. To change either network component, use Node.js and rebuild before committing:
 

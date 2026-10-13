@@ -24,7 +24,7 @@ An exact title or name identifies an entity in this version. Two distinct projec
 | `frontend/src/pi_network.js` | Render the PI network, pair selection, count styling, layout controls, and viewport state. |
 | `frontend/network.css` | Network controls and canvas styling, including the narrow-screen frame. |
 | `frontend/dist/*.js` | Generated browser bundles committed for deployment. Do not edit them directly. |
-| `appctl` | Local Streamlit start, stop, reset, and status commands; records and logs are ignored under `.run/`. |
+| `appctl` | Local Streamlit start, stop, restart, and status commands; records and logs are ignored under `.run/`. |
 | `.devcontainer/devcontainer.json` | Optional Codespaces environment that installs Python dependencies and starts Streamlit on port 8501. |
 | `tests/test_app.py` | Source validation and reconciliation of both matrices, graphs, and serialized network links. |
 
@@ -48,12 +48,12 @@ From the repository root, use Python 3.11 or newer:
 ```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
-.venv/bin/streamlit run app.py
+./appctl start
 ```
 
-After setup, `./appctl start`, `./appctl stop`, `./appctl reset`, and
+After setup, `./appctl start`, `./appctl stop`, `./appctl restart`, and
 `./appctl status` manage a local server on `127.0.0.1:8501`. Use `--port N`
-for another port. `reset` restarts a server started by this wrapper; reload
+for another port. `restart` restarts a server started by this wrapper; reload
 the browser to create a fresh Streamlit session. The wrapper refuses to stop
 an unrelated process using the port.
 
