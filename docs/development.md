@@ -4,7 +4,7 @@ This guide is for maintainers and contributors working on the Streamlit app. The
 
 ## Source of truth and meaning
 
-`project_participant.txt` is the only maintained data input. It is a UTF-8 TSV with the exact header `project<TAB>participant` and one recorded project–PI participation per row. Edit this file to correct the data. The original workbook is a historical reference and is not read by the app.
+`data_source/project_participant.txt` is the only maintained data input. It is a UTF-8 TSV with the exact header `project<TAB>participant` and one recorded project–PI participation per row. Edit this file to correct the data. The original workbook is a historical reference and is not read by the app.
 
 The app derives all other structures in memory. A link means that a PI is listed as participating in a project. The source does not establish a project lead, direct PI-to-PI collaboration, year, or effort. The current source has 29 projects, 18 PIs, and 107 distinct pairs; use these as a review baseline, not as permanent constraints.
 
@@ -14,7 +14,7 @@ An exact title or name identifies an entity in this version. Two distinct projec
 
 | Path | Responsibility |
 | --- | --- |
-| `project_participant.txt` | Maintained participation pairs. |
+| `data_source/project_participant.txt` | Maintained participation pairs. |
 | `data_model.py` | Validate TSV rows, derive IDs, pair tables, and the project × PI matrix. |
 | `app.py` | Streamlit page, matrix, shared selection, counts, and detail tables. |
 | `network_component.py` | Build the bipartite graph, prepare Cytoscape elements and initial positions, register the Streamlit component. |
@@ -26,7 +26,7 @@ An exact title or name identifies an entity in this version. Two distinct projec
 The data path is:
 
 ```text
-project_participant.txt
+data_source/project_participant.txt
   → data_model.load_data()
   → app.py: matrix, selector, details, record table
   → network_component.graph_payload()
@@ -49,7 +49,7 @@ Python dependencies are pinned in `requirements.txt`. Node.js and npm are needed
 
 ## Changing the source data
 
-1. Edit `project_participant.txt` using its existing two-column TSV format. Preserve the exact display strings and do not add inferred relationships.
+1. Edit `data_source/project_participant.txt` using its existing two-column TSV format. Preserve the exact display strings and do not add inferred relationships.
 2. Run `.venv/bin/python -m unittest discover -s tests -v`. The loader rejects malformed rows, empty fields, leading or trailing whitespace, duplicate pairs, and generated PI ID collisions. It reports possible name or title variants as warnings for human review.
 3. Start the app and check the counts, the affected matrix row or column, the network neighborhood, and the detail table. A valid addition or deletion may change the 29/18/107 baseline.
 4. Commit the TSV correction with the relevant code or documentation change. Generated IDs and processed tables should not be written back to the TSV.

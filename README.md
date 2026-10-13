@@ -1,6 +1,6 @@
 # ADARC project participation
 
-This Streamlit app shows which PIs are listed for each project in `project_participant.txt`. The Plotly matrix and Cytoscape.js network both represent the same project–PI pairs. A shared search selection highlights a project row or PI column in the matrix and its immediate connections in the network. Graph clicks update that selection. The full relationship table is available in the **All records** tab.
+This Streamlit app shows which PIs are listed for each project in `data_source/project_participant.txt`. The Plotly matrix and Cytoscape.js network both represent the same project–PI pairs. A shared search selection highlights a project row or PI column in the matrix and its immediate connections in the network. Graph clicks update that selection. The full relationship table is available in the **All records** tab.
 
 For code ownership, data edits, frontend builds, and review checks, see the [development guide](docs/development.md).
 
@@ -40,6 +40,6 @@ Run the validation and reconciliation checks with:
 
 ## Deploy
 
-Keep `app.py`, `data_model.py`, `network_component.py`, `project_participant.txt`, `requirements.txt`, and `frontend/dist/network.js` in the public GitHub repository. Connect that repository to Streamlit Community Cloud and choose `app.py` as the entry point. The historical workbook and prototype images are excluded by `.gitignore`; the app does not use them. The public repository and deployed app will expose the TSV's project titles and PI names.
+Keep `app.py`, `data_model.py`, `network_component.py`, `data_source/project_participant.txt`, `requirements.txt`, and `frontend/dist/network.js` in the public GitHub repository. Connect that repository to Streamlit Community Cloud and choose `app.py` as the entry point. The historical workbook and prototype images are excluded by `.gitignore`; the app does not use them. The public repository and deployed app will expose the TSV's project titles and PI names.
 
 This view records co-participation in a project. It does not imply that two PIs directly collaborated with one another or identify a project lead.

@@ -11,7 +11,7 @@ from data_model import CollaborationData, SourceError, load_data
 from network_component import render_network
 
 
-SOURCE = Path(__file__).with_name("project_participant.txt")
+SOURCE = Path(__file__).parent / "data_source" / "project_participant.txt"
 TEAL = "#087F75"
 GOLD = "#D88900"
 

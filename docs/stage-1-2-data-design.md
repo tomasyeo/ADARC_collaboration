@@ -2,9 +2,9 @@
 
 ## Purpose and scope
 
-Prepare the department's project–PI participation data for a Streamlit app. This plan covers validation and in-memory transformation only. The app's input is `project_participant.txt`, a UTF-8 tab-delimited file with exactly two columns: `project` and `participant`. Each row means that the named PI participates in the named project.
+Prepare the department's project–PI participation data for a Streamlit app. This plan covers validation and in-memory transformation only. The app's input is `data_source/project_participant.txt`, a UTF-8 tab-delimited file with exactly two columns: `project` and `participant`. Each row means that the named PI participates in the named project.
 
-`project_participant.txt` is the sole maintained source for this version. Make corrections and additions in the TSV, validate them, and commit the updated file. The existing Excel workbook documents where the initial data came from; it is a historical reference and is not used to rebuild the TSV after subsequent edits.
+`data_source/project_participant.txt` is the sole maintained source for this version. Make corrections and additions in the TSV, validate them, and commit the updated file. The existing Excel workbook documents where the initial data came from; it is a historical reference and is not used to rebuild the TSV after subsequent edits.
 
 The current TSV has 107 distinct participation rows, 29 project titles, and 18 PI names. These counts are a baseline for reviewing the first implementation, not permanent limits. No lead, role, year, effort, or direct PI-to-PI relationship is inferred.
 

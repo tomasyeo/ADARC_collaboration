@@ -2,7 +2,7 @@
 
 ## Scope and source
 
-This plan covers the three visualization stages discussed after [stages 1 and 2](stage-1-2-data-design.md). The maintained source is `project_participant.txt`; the app validates and reads that TSV. Each `(project, participant)` pair means that the named PI participates in the named project. The same in-memory memberships drive both views. The original workbook is a historical reference, not a second maintained input.
+This plan covers the three visualization stages discussed after [stages 1 and 2](stage-1-2-data-design.md). The maintained source is `data_source/project_participant.txt`; the app validates and reads that TSV. Each `(project, participant)` pair means that the named PI participates in the named project. The same in-memory memberships drive both views. The original workbook is a historical reference, not a second maintained input.
 
 The current file contains 29 projects, 18 PIs, and 107 unique pairs. These are verification baselines, not fixed limits. The app does not infer project leads, direct PI-to-PI work, or any relationship missing from the source.
 
@@ -32,7 +32,7 @@ The current file contains 29 projects, 18 PIs, and 107 unique pairs. These are v
 
 **Usability:** Confirm that the legend states what a mark and edge mean, and that the interface never presents co-participation as direct pairwise collaboration. Check full-name access, readable contrast, shape differences, keyboard access to the selector and relationship table, label clipping, and narrower layouts. Confirm that the matrix and relationship table preserve the complete record while the network supports exploration.
 
-**Package:** Keep the Streamlit entry point, the maintained `project_participant.txt`, and a dependency file in the public GitHub repository. Pin Streamlit, pandas, NetworkX, and Plotly versions in `requirements.txt`; pin Cytoscape.js and the frontend build tool in the npm lockfile. Commit the built browser bundle so Streamlit deployment does not need Node.js. Use paths relative to the application/repository, not machine-specific absolute paths. Make source corrections in the TSV and commit them; the app validates the committed TSV at startup and does not write IDs or processed data back to it. The original workbook and prototype images remain excluded from the public repository. Do not add a database or a separate PyArrow/Parquet pipeline.
+**Package:** Keep the Streamlit entry point, the maintained `data_source/project_participant.txt`, and a dependency file in the public GitHub repository. Pin Streamlit, pandas, NetworkX, and Plotly versions in `requirements.txt`; pin Cytoscape.js and the frontend build tool in the npm lockfile. Commit the built browser bundle so Streamlit deployment does not need Node.js. Use paths relative to the application/repository, not machine-specific absolute paths. Make source corrections in the TSV and commit them; the app validates the committed TSV at startup and does not write IDs or processed data back to it. The original workbook and prototype images remain excluded from the public repository. Do not add a database or a separate PyArrow/Parquet pipeline.
 
 **Deployment boundary:** The public GitHub repository is `tomasyeo/ADARC_collaboration`. This Cytoscape implementation is developed on `feature-cytoscape`; it does not change the deployed app until the branch is integrated and Streamlit redeploys it.
 

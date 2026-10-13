@@ -7,7 +7,7 @@ from data_model import SourceError, load_data
 from network_component import build_graph, graph_payload
 
 
-SOURCE = Path(__file__).resolve().parents[1] / "project_participant.txt"
+SOURCE = Path(__file__).resolve().parents[1] / "data_source" / "project_participant.txt"
 
 
 class SourceAndViewTests(unittest.TestCase):
