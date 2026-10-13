@@ -2,7 +2,8 @@
 
 ## Status and decisions
 
-This plan was implemented on the `feature-improvements` branch. The maintained input remains
+This plan is implemented on `main` (originally developed on the
+`feature-improvements` branch). The maintained input remains
 `data_source/project_participant.txt`: one project–PI participation per row.
 The original workbook is historical. Do not add a second maintained pair
 table, stable external IDs, years, project leads, or inferred relationships.

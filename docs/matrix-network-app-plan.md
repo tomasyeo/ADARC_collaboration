@@ -34,7 +34,7 @@ The current file contains 29 projects, 18 PIs, and 107 unique pairs. These are v
 
 **Package:** Keep the Streamlit entry point, the maintained `data_source/project_participant.txt`, and a dependency file in the public GitHub repository. Pin Streamlit, pandas, NetworkX, and Plotly versions in `requirements.txt`; pin Cytoscape.js and the frontend build tool in the npm lockfile. Commit the built browser bundle so Streamlit deployment does not need Node.js. Use paths relative to the application/repository, not machine-specific absolute paths. Make source corrections in the TSV and commit them; the app validates the committed TSV on each rerun and does not write IDs or processed data back to it. The original workbook and prototype images remain excluded from the public repository. Do not add a database or a separate PyArrow/Parquet pipeline.
 
-**Release status:** The public GitHub repository is `tomasyeo/ADARC_collaboration`. The Cytoscape implementation and the later node-click fix have been merged into `main`. A Streamlit Community Cloud deployment must use the current `main` commit to receive these changes.
+**Release status:** The public GitHub repository is `tomasyeo/ADARC_collaboration`. The Cytoscape implementation, the later node-click fix, and the PI shared-projects page are committed on local `main`. A local commit alone does not update GitHub or Streamlit Community Cloud; push `main` when publishing these changes is authorized.
 
 ## Reference documentation
 

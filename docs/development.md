@@ -108,7 +108,7 @@ The tests check source validation, row-order independence, a sample source updat
 - A retained out-of-page selection remains visible in search; choose Show all to clear it from either page.
 - Recompute, reset, focus, zoom, and drag the PI network, then leave and return to its tab; positions and viewport should persist for the same source.
 
-Use a feature branch for changes and review the diff before integrating it into `main`. The public GitHub repository exposes the TSV's titles and names. The workbook and prototype images are excluded from Git; check newly added files before pushing. Streamlit deployment is a separate step after integration.
+Review the diff before committing to `main`. The public GitHub repository exposes the TSV's titles and names. The workbook and prototype images are excluded from Git; check newly added files before pushing. A local commit does not update GitHub or Streamlit Community Cloud; publishing requires a separate push and deployment update.
 
 ## Known limits
 
