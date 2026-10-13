@@ -2,6 +2,8 @@
 
 This Streamlit app shows which PIs are listed for each project in `project_participant.txt`. The Plotly matrix and Cytoscape.js network both represent the same project–PI pairs. A shared search selection highlights a project row or PI column in the matrix and its immediate connections in the network. Graph clicks update that selection. The full relationship table is available in the **All records** tab.
 
+For code ownership, data edits, frontend builds, and review checks, see the [development guide](docs/development.md).
+
 The maintained source is a UTF-8 tab-separated file with exactly these columns:
 
 ```text
