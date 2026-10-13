@@ -24,7 +24,7 @@ The current file contains 29 projects, 18 PIs, and 107 unique pairs. These are v
 
 **Linked selection:** Use the same session-state selection as the matrix. Selecting a project emphasizes its node, incident edges, and participating PIs. Selecting a PI emphasizes its node, incident edges, and projects. Cytoscape node taps send the exact source name and type to Streamlit; the search control updates and the matrix highlights the corresponding row or column. Other nodes remain visible but muted unless the user enables selected-neighborhood focus. The detail area lists every connected name or title. Keep the searchable control and table as the keyboard-accessible path.
 
-**Network acceptance checks:** For the current source, the graph has 47 nodes and 107 edges. Every edge maps to one TSV pair and one marked matrix cell. Highlighted neighbors and detail lists agree with the source. Test dense regions, long labels, zooming, and small-screen behavior. If the all-node view remains too crowded, make the selected node's immediate neighborhood the default focus while retaining a full-network overview as an optional view.
+**Network acceptance checks:** For the current source, the graph has 47 nodes and 107 edges. Every edge maps to one TSV pair and one marked matrix cell. Highlighted neighbors and detail lists agree with the source. Test dense regions, long labels, zooming, and small-screen behavior. After page scrolling, panning, recomputing the force layout, or dragging a node, clicking its colored shape must update both the highlight and shared selector. If the all-node view remains too crowded, make the selected node's immediate neighborhood the default focus while retaining a full-network overview as an optional view.
 
 ## 3. Verify and package for Streamlit deployment
 
@@ -34,7 +34,7 @@ The current file contains 29 projects, 18 PIs, and 107 unique pairs. These are v
 
 **Package:** Keep the Streamlit entry point, the maintained `data_source/project_participant.txt`, and a dependency file in the public GitHub repository. Pin Streamlit, pandas, NetworkX, and Plotly versions in `requirements.txt`; pin Cytoscape.js and the frontend build tool in the npm lockfile. Commit the built browser bundle so Streamlit deployment does not need Node.js. Use paths relative to the application/repository, not machine-specific absolute paths. Make source corrections in the TSV and commit them; the app validates the committed TSV at startup and does not write IDs or processed data back to it. The original workbook and prototype images remain excluded from the public repository. Do not add a database or a separate PyArrow/Parquet pipeline.
 
-**Deployment boundary:** The public GitHub repository is `tomasyeo/ADARC_collaboration`. This Cytoscape implementation is developed on `feature-cytoscape`; it does not change the deployed app until the branch is integrated and Streamlit redeploys it.
+**Release status:** The public GitHub repository is `tomasyeo/ADARC_collaboration`. The Cytoscape implementation and the later node-click fix have been merged into `main`. A Streamlit Community Cloud deployment must use the current `main` commit to receive these changes.
 
 ## Reference documentation
 

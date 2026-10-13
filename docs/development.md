@@ -21,6 +21,7 @@ An exact title or name identifies an entity in this version. Two distinct projec
 | `frontend/src/network.js` | Render Cytoscape, handle layouts, focus, selection, drag, zoom, and component state. |
 | `frontend/network.css` | Network controls and canvas styling, including the narrow-screen frame. |
 | `frontend/dist/network.js` | Generated browser bundle committed for deployment. Do not edit it directly. |
+| `.devcontainer/devcontainer.json` | Optional Codespaces environment that installs Python dependencies and starts Streamlit on port 8501. |
 | `tests/test_app.py` | Source validation and reconciliation of TSV, matrix, graph, and serialized network links. |
 
 The data path is:
@@ -47,6 +48,8 @@ python3 -m venv .venv
 
 Python dependencies are pinned in `requirements.txt`. Node.js and npm are needed only when changing the Cytoscape frontend. The pinned frontend dependencies are in `frontend/package-lock.json`.
 
+The optional Dev Container uses Python 3.11, installs `requirements.txt`, and starts Streamlit when attached. Its launch command disables Streamlit's CORS and XSRF protections, so review the forwarded port's visibility before using that environment with non-public data.
+
 ## Changing the source data
 
 1. Edit `data_source/project_participant.txt` using its existing two-column TSV format. Preserve the exact display strings and do not add inferred relationships.
@@ -69,7 +72,7 @@ cd ..
 
 Commit both the frontend source and `frontend/dist/network.js`. Streamlit registers the bundled JavaScript when its Python process starts, so restart the Streamlit server after rebuilding. Streamlit deployment uses the committed bundle and does not need a Node build step.
 
-The network defaults to two columns, with projects and PIs ordered to reduce crossings. The force layout and its recompute button provide an exploratory arrangement; distance does not measure collaboration strength. The focus button shows a selected node and its immediate neighbors. The frontend retains positions and viewport state across ordinary Streamlit reruns for the same source pairs; changing the set of pairs resets that state. On narrow screens, a focused neighborhood gets a compact arrangement.
+The network defaults to two columns, with projects and PIs ordered to reduce crossings. The force layout and its recompute button provide an exploratory arrangement; distance does not measure collaboration strength. The focus button shows a selected node and its immediate neighbors. The frontend retains positions and viewport state across ordinary Streamlit reruns for the same source pairs; changing the set of pairs resets that state. On narrow screens, a focused neighborhood gets a compact arrangement. The frontend refreshes Cytoscape's cached canvas bounds when the page moves and immediately before a pointer click, so page scrolling does not offset node hit testing. These refreshes preserve the current zoom and pan.
 
 ## Verification before review
 
@@ -84,6 +87,7 @@ The tests check source validation, row-order independence, a sample source updat
 
 - Selecting a project and a PI updates the matrix highlight, network highlight, and detail table.
 - Clicking a graph node updates the shared selector; clearing selection restores the full view.
+- After scrolling the page around the graph, click a colored node and confirm its highlight and selector both update. Repeat after zooming, panning, recomputing the force layout, and dragging a node.
 - Focus toggles on and off, and both layout choices, force recompute, reset, drag, zoom, and fit still work.
 - Long names are available in the selector, hover tooltip, or detail table; inspect the view at a narrow width.
 
