@@ -1,7 +1,5 @@
 import cytoscape from "cytoscape";
 
-const viewStates = new Map();
-
 function sameGraph(previous, signature) {
   return previous?.signature === signature;
 }
@@ -47,7 +45,7 @@ function styleSheet() {
   ];
 }
 
-export default function component({ parentElement, data, key, setTriggerValue }) {
+export default function component({ parentElement, data, setStateValue, setTriggerValue }) {
   const root = parentElement.querySelector(".network-component");
   const canvas = root.querySelector(".network-canvas");
   const layoutSelect = root.querySelector(".layout-choice");
@@ -56,7 +54,7 @@ export default function component({ parentElement, data, key, setTriggerValue })
   const fitButton = root.querySelector(".fit-network");
   const focusButton = root.querySelector(".focus-selection");
   const tooltip = root.querySelector(".network-tooltip");
-  const saved = viewStates.get(key);
+  const saved = data.savedView;
   const restore = sameGraph(saved, data.signature) ? saved : null;
   const sameViewport = restore && Math.abs((restore.width ?? 0) - canvas.clientWidth) < 10;
   let mode = restore?.mode ?? "bipartite";
@@ -64,6 +62,7 @@ export default function component({ parentElement, data, key, setTriggerValue })
   let selectedId = data.selectedId ?? null;
   let overviewPositions = restore?.overviewPositions ?? restore?.positions ?? data.positions;
   let mobileFocusActive = restore?.mobileFocusActive ?? false;
+  let publishTimer = null;
   layoutSelect.value = mode;
 
   function syncFocusButton(hasSelection) {
@@ -90,11 +89,23 @@ export default function component({ parentElement, data, key, setTriggerValue })
   function snapshot() {
     const positions = {};
     cy.nodes().forEach((node) => { positions[node.id()] = node.position(); });
-    viewStates.set(key, {
+    const state = {
       signature: data.signature, mode, focused, selectedId, positions,
       overviewPositions, mobileFocusActive,
       zoom: cy.zoom(), pan: cy.pan(), width: canvas.clientWidth,
-    });
+    };
+    return state;
+  }
+
+  function publishView() {
+    if (publishTimer !== null) clearTimeout(publishTimer);
+    publishTimer = null;
+    setStateValue("view", snapshot());
+  }
+
+  function schedulePublish() {
+    if (publishTimer !== null) clearTimeout(publishTimer);
+    publishTimer = setTimeout(publishView, 300);
   }
 
   function positionsNow() {
@@ -182,8 +193,8 @@ export default function component({ parentElement, data, key, setTriggerValue })
     }
     mobileFocusActive = false;
     overviewPositions = positionsNow();
-    if (focused) fitVisible();
-    snapshot();
+    fitVisible();
+    publishView();
   }
 
   applySelection();
@@ -198,19 +209,20 @@ export default function component({ parentElement, data, key, setTriggerValue })
     layoutSelect.value = mode;
     runLayout(mode);
   };
-  fitButton.onclick = fitVisible;
+  fitButton.onclick = () => { fitVisible(); publishView(); };
   focusButton.onclick = () => {
     tooltip.style.display = "none";
     focused = !focused;
     applySelection();
     fitVisible();
+    publishView();
   };
 
   cy.on("tap", "node", (event) => {
     const node = event.target;
     selectedId = node.id();
     applySelection();
-    snapshot();
+    publishView();
     setTriggerValue("selected", {
       kind: node.data("kind"), name: node.data("label"),
     });
@@ -220,7 +232,7 @@ export default function component({ parentElement, data, key, setTriggerValue })
     selectedId = null;
     focused = false;
     applySelection();
-    snapshot();
+    publishView();
     setTriggerValue("selected", null);
   });
   cy.on("mouseover", "node", (event) => {
@@ -236,9 +248,9 @@ export default function component({ parentElement, data, key, setTriggerValue })
   cy.on("mouseout", "node", () => { tooltip.style.display = "none"; });
   cy.on("dragfree", "node", () => {
     if (!mobileFocusActive) overviewPositions = positionsNow();
-    snapshot();
+    publishView();
   });
-  cy.on("pan zoom", snapshot);
+  cy.on("pan zoom", () => { snapshot(); schedulePublish(); });
 
   let previousWidth = canvas.clientWidth;
   let disposed = false;
@@ -274,6 +286,7 @@ export default function component({ parentElement, data, key, setTriggerValue })
     if (Math.abs(nextWidth - previousWidth) > 10) {
       previousWidth = nextWidth;
       fitVisible();
+      publishView();
     }
   });
   observer.observe(canvas);
@@ -284,6 +297,7 @@ export default function component({ parentElement, data, key, setTriggerValue })
     if (eventRoot !== document) eventRoot.removeEventListener("scroll", onScroll, true);
     canvas.removeEventListener("pointerdown", refreshBounds, true);
     if (scrollFrame !== null) cancelAnimationFrame(scrollFrame);
+    if (publishTimer !== null) clearTimeout(publishTimer);
     snapshot();
     cy.destroy();
   };

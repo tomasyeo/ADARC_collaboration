@@ -2,15 +2,91 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from app import matrix_figure
+from app import matrix_figure, pi_matrix_figure, valid_selection
 from data_model import SourceError, load_data
 from network_component import build_graph, graph_payload
+from pi_network_component import pi_graph_payload
+from pi_projection import pair_key, project_pi_pairs
+from streamlit.testing.v1 import AppTest
 
 
 SOURCE = Path(__file__).resolve().parents[1] / "data_source" / "project_participant.txt"
 
 
 class SourceAndViewTests(unittest.TestCase):
+    def test_retained_pair_can_be_cleared_from_project_page(self):
+        data = load_data(SOURCE)
+        pair = next(iter(project_pi_pairs(data).shared_projects))
+        app = AppTest.from_file(str(SOURCE.parents[1] / "app.py"), default_timeout=10).run()
+        app.session_state["semantic_selection"] = ("Pair", *pair)
+        app.run()
+        self.assertFalse(app.exception)
+        self.assertEqual(app.selectbox[0].value, ("Pair", *pair))
+        app.selectbox[0].set_value(None).run()
+        self.assertFalse(app.exception)
+        self.assertIsNone(app.session_state["semantic_selection"])
+
+    def test_pi_projection_reconciles_with_source(self):
+        from collections import defaultdict
+        from itertools import combinations
+
+        raw = [line.split("\t") for line in SOURCE.read_text(encoding="utf-8").splitlines()[1:]]
+        by_project = defaultdict(set)
+        by_pi = defaultdict(set)
+        for project, pi in raw:
+            by_project[project].add(pi)
+            by_pi[pi].add(project)
+        expected_pairs = defaultdict(set)
+        for project, pis in by_project.items():
+            for first, second in combinations(sorted(pis), 2):
+                expected_pairs[pair_key(first, second)].add(project)
+
+        data = load_data(SOURCE)
+        projection = project_pi_pairs(data)
+        self.assertEqual(set(projection.names), set(by_pi))
+        self.assertEqual(sum(projection.matrix.at[pi, pi] for pi in projection.names), len(raw))
+        self.assertEqual(sum(map(len, projection.shared_projects.values())),
+                         sum(len(pis) * (len(pis) - 1) // 2 for pis in by_project.values()))
+        self.assertEqual(set(projection.shared_projects), set(expected_pairs))
+        for pi in projection.names:
+            self.assertEqual(set(projection.projects_by_pi[pi]), by_pi[pi])
+            self.assertEqual(projection.matrix.at[pi, pi], len(by_pi[pi]))
+        for pair, titles in projection.shared_projects.items():
+            self.assertEqual(set(titles), expected_pairs[pair])
+            self.assertEqual(projection.matrix.at[pair[0], pair[1]], len(titles))
+            self.assertEqual(projection.matrix.at[pair[1], pair[0]], len(titles))
+
+        payload = pi_graph_payload(data, projection, None)
+        nodes = [item["data"] for item in payload["elements"] if "source" not in item["data"]]
+        edges = [item["data"] for item in payload["elements"] if "source" in item["data"]]
+        self.assertEqual(len(nodes), len(projection.names))
+        self.assertEqual(len(edges), len(expected_pairs))
+        self.assertEqual({(edge["first"], edge["second"]): edge["count"] for edge in edges},
+                         {pair: len(titles) for pair, titles in expected_pairs.items()})
+        selected = ("Pair", *next(iter(expected_pairs)))
+        self.assertTrue(valid_selection(selected, data))
+        self.assertIsNotNone(pi_graph_payload(data, projection, selected)["selectedId"])
+        pi_matrix_figure(projection, selected).to_plotly_json()
+
+    def test_projection_updates_and_rejects_removed_pair(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "input.txt"
+            path.write_text("project\tparticipant\nA\tP1\nA\tP2\nB\tP1\nC\tP3\n",
+                            encoding="utf-8")
+            data = load_data(path)
+            projection = project_pi_pairs(data)
+            self.assertEqual(projection.shared_projects, {("P1", "P2"): ("A",)})
+            self.assertEqual(projection.matrix.at["P3", "P3"], 1)
+            self.assertEqual(projection.matrix.at["P1", "P3"], 0)
+            self.assertTrue(valid_selection(("Pair", "P1", "P2"), data))
+            self.assertFalse(valid_selection(("Pair", "P1", "P3"), data))
+
+            path.write_text("project\tparticipant\nA\tP1\nB\tP2\nC\tP3\n",
+                            encoding="utf-8")
+            changed = load_data(path)
+            self.assertFalse(valid_selection(("Pair", "P1", "P2"), changed))
+            self.assertEqual(project_pi_pairs(changed).shared_projects, {})
+
     def test_source_reconciles_with_both_views(self):
         raw_lines = SOURCE.read_text(encoding="utf-8").splitlines()
         self.assertEqual(raw_lines[0], "project\tparticipant")

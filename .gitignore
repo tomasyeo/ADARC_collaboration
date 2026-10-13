@@ -2,7 +2,9 @@
 __pycache__/
 .pytest_cache/
 .venv/
+.run/
 frontend/node_modules/
+prototypes/output/
 *.pyc
 ADARC_PI_Collaborations_FY2026.xlsx
 project_participant_network.png

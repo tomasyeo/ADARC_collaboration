@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "build": "esbuild src/network.js --bundle --minify --format=esm --platform=browser --target=es2020 --outfile=dist/network.js"
+    "build": "esbuild src/network.js --bundle --minify --format=esm --platform=browser --target=es2020 --outfile=dist/network.js && esbuild src/pi_network.js --bundle --minify --format=esm --platform=browser --target=es2020 --outfile=dist/pi_network.js"
   },
   "dependencies": {
     "cytoscape": "3.34.3"

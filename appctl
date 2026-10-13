@@ -1,0 +1,152 @@
+#!/usr/bin/env python3
+"""Start, stop, and restart this repository's local Streamlit server."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import socket
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parent
+RUNTIME = ROOT / ".run"
+PYTHON = ROOT / ".venv" / "bin" / "python"
+HOST = "127.0.0.1"
+
+
+def paths(port: int) -> tuple[Path, Path]:
+    return RUNTIME / f"streamlit-{port}.json", RUNTIME / f"streamlit-{port}.log"
+
+
+def process_start(pid: int) -> str | None:
+    result = subprocess.run(
+        ["ps", "-p", str(pid), "-o", "lstart="],
+        capture_output=True, text=True, check=False,
+    )
+    return result.stdout.strip() if result.returncode == 0 else None
+
+
+def managed_process(record: dict, port: int) -> bool:
+    pid = record.get("pid")
+    if not isinstance(pid, int) or record.get("port") != port:
+        return False
+    if process_start(pid) != record.get("started"):
+        return False
+    command = subprocess.run(
+        ["ps", "-p", str(pid), "-o", "command="],
+        capture_output=True, text=True, check=False,
+    ).stdout
+    return str(ROOT / "app.py") in command and f"--server.port {port}" in command
+
+
+def read_record(port: int) -> dict | None:
+    state, _ = paths(port)
+    try:
+        record = json.loads(state.read_text(encoding="utf-8"))
+    except (FileNotFoundError, ValueError):
+        return None
+    return record if isinstance(record, dict) else None
+
+
+def port_open(port: int) -> bool:
+    with socket.socket() as connection:
+        connection.settimeout(0.3)
+        return connection.connect_ex((HOST, port)) == 0
+
+
+def start(port: int) -> int:
+    state, log = paths(port)
+    record = read_record(port)
+    if record and managed_process(record, port):
+        print(f"Already running at http://{HOST}:{port}/ (PID {record['pid']}).")
+        return 0
+    if port_open(port):
+        print(f"Port {port} is in use by a process this wrapper does not manage.", file=sys.stderr)
+        return 1
+    if not PYTHON.is_file():
+        print("Missing .venv/bin/python. Create the virtual environment and install requirements first.",
+              file=sys.stderr)
+        return 1
+
+    RUNTIME.mkdir(exist_ok=True)
+    command = [str(PYTHON), "-m", "streamlit", "run", str(ROOT / "app.py"),
+               "--server.headless", "true", "--server.address", HOST,
+               "--server.port", str(port)]
+    with log.open("a", encoding="utf-8") as output:
+        process = subprocess.Popen(command, cwd=ROOT, stdin=subprocess.DEVNULL,
+                                   stdout=output, stderr=subprocess.STDOUT,
+                                   start_new_session=True)
+    started = process_start(process.pid)
+    if not started:
+        print(f"Streamlit exited before its process could be recorded. See {log}.", file=sys.stderr)
+        return 1
+    state.write_text(json.dumps({"pid": process.pid, "port": port, "started": started}) + "\n",
+                     encoding="utf-8")
+    for _ in range(40):
+        if process.poll() is not None:
+            state.unlink(missing_ok=True)
+            print(f"Streamlit exited during startup. See {log}.", file=sys.stderr)
+            return 1
+        if port_open(port):
+            print(f"Running at http://{HOST}:{port}/ (PID {process.pid}). Log: {log}")
+            return 0
+        time.sleep(0.25)
+    print(f"Streamlit is still starting. Check {log} or run status.", file=sys.stderr)
+    return 1
+
+
+def stop(port: int) -> int:
+    state, _ = paths(port)
+    record = read_record(port)
+    if not record or not managed_process(record, port):
+        state.unlink(missing_ok=True)
+        print(f"No managed app is running on port {port}.")
+        return 0
+    pid = record["pid"]
+    os.kill(pid, 15)
+    for _ in range(40):
+        if not managed_process(record, port):
+            state.unlink(missing_ok=True)
+            print(f"Stopped app on port {port}.")
+            return 0
+        time.sleep(0.25)
+    print(f"PID {pid} did not stop; inspect it before retrying. State kept at {state}.",
+          file=sys.stderr)
+    return 1
+
+
+def status(port: int) -> int:
+    record = read_record(port)
+    if record and managed_process(record, port):
+        print(f"Running at http://{HOST}:{port}/ (PID {record['pid']}).")
+        return 0
+    if port_open(port):
+        print(f"Port {port} is occupied by an unmanaged process.")
+        return 1
+    print(f"No app is running on port {port}.")
+    return 1
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("command", choices=("start", "stop", "reset", "status"))
+    parser.add_argument("--port", type=int, default=8501)
+    args = parser.parse_args()
+    if not 1 <= args.port <= 65535:
+        parser.error("--port must be between 1 and 65535")
+    if args.command == "start":
+        return start(args.port)
+    if args.command == "stop":
+        return stop(args.port)
+    if args.command == "status":
+        return status(args.port)
+    return stop(args.port) or start(args.port)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

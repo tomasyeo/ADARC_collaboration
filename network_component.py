@@ -115,13 +115,20 @@ def _register_component():
 NETWORK_COMPONENT = None
 
 
+def _on_view_change() -> None:
+    view = st.session_state.get("cytoscape_network", {}).get("view")
+    if isinstance(view, dict):
+        st.session_state["project_graph_view"] = view
+
+
 def render_network(data: CollaborationData, selection: tuple[str, str] | None, on_select):
     global NETWORK_COMPONENT
     if NETWORK_COMPONENT is None:
         NETWORK_COMPONENT = _register_component()
+    payload = graph_payload(data, selection)
+    payload["savedView"] = st.session_state.get("project_graph_view")
     return NETWORK_COMPONENT(
-        data=graph_payload(data, selection),
-        key="cytoscape_network",
-        on_selected_change=on_select,
+        data=payload, key="cytoscape_network",
+        on_selected_change=on_select, on_view_change=_on_view_change,
         width="stretch",
     )
