@@ -37,10 +37,15 @@
   outline-offset: 2px;
 }
 
-.network-toolbar .focus-label {
-  align-items: center;
-  display: inline-flex;
-  gap: 0.35rem;
+.network-toolbar .focus-selection[aria-pressed="true"] {
+  background: #f0a727;
+  border-color: #f0a727;
+  color: #14202b;
+}
+
+.network-toolbar .focus-selection:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .network-frame {

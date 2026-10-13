@@ -54,7 +54,7 @@ export default function component({ parentElement, data, key, setTriggerValue })
   const recomputeButton = root.querySelector(".recompute-layout");
   const resetButton = root.querySelector(".reset-layout");
   const fitButton = root.querySelector(".fit-network");
-  const focusCheckbox = root.querySelector(".focus-selection");
+  const focusButton = root.querySelector(".focus-selection");
   const tooltip = root.querySelector(".network-tooltip");
   const saved = viewStates.get(key);
   const restore = sameGraph(saved, data.signature) ? saved : null;
@@ -65,7 +65,11 @@ export default function component({ parentElement, data, key, setTriggerValue })
   let overviewPositions = restore?.overviewPositions ?? restore?.positions ?? data.positions;
   let mobileFocusActive = restore?.mobileFocusActive ?? false;
   layoutSelect.value = mode;
-  focusCheckbox.checked = focused;
+
+  function syncFocusButton(hasSelection) {
+    focusButton.disabled = !hasSelection;
+    focusButton.setAttribute("aria-pressed", String(focused));
+  }
 
   const initialPositions = restore?.positions ?? data.positions;
   const cy = cytoscape({
@@ -137,12 +141,12 @@ export default function component({ parentElement, data, key, setTriggerValue })
     cy.elements().removeClass("selected neighbor active muted hidden");
     const selected = selectedId ? cy.$id(selectedId) : cy.collection();
     const hasSelection = selected.length === 1;
-    focusCheckbox.disabled = !hasSelection;
     if (!hasSelection) {
       focused = false;
-      focusCheckbox.checked = false;
+      syncFocusButton(false);
       return;
     }
+    syncFocusButton(true);
     const neighborhood = selected.closedNeighborhood();
     cy.elements().addClass("muted");
     neighborhood.removeClass("muted");
@@ -195,9 +199,9 @@ export default function component({ parentElement, data, key, setTriggerValue })
     runLayout(mode);
   };
   fitButton.onclick = fitVisible;
-  focusCheckbox.onchange = () => {
+  focusButton.onclick = () => {
     tooltip.style.display = "none";
-    focused = focusCheckbox.checked;
+    focused = !focused;
     applySelection();
     fitVisible();
   };
@@ -215,7 +219,6 @@ export default function component({ parentElement, data, key, setTriggerValue })
     if (event.target !== cy) return;
     selectedId = null;
     focused = false;
-    focusCheckbox.checked = false;
     applySelection();
     snapshot();
     setTriggerValue("selected", null);

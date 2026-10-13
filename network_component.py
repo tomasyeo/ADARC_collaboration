@@ -93,7 +93,7 @@ HTML = """
     <button class="recompute-layout" type="button">Recompute force layout</button>
     <button class="reset-layout" type="button">Reset positions</button>
     <button class="fit-network" type="button">Fit to view</button>
-    <label class="focus-label"><input class="focus-selection" type="checkbox"> Focus selection</label>
+    <button class="focus-selection" type="button" aria-pressed="false">Focus selection</button>
   </div>
   <div class="network-frame">
     <div class="network-canvas" role="img" aria-label="Interactive project and PI membership network"></div>
