@@ -1,0 +1,108 @@
+project	participant
+Using NNRTIs to target the HIV latent reservoir	Anthony Bowen
+Using NNRTIs to target the HIV latent reservoir	Ho-Huang
+Using NNRTIs to target the HIV latent reservoir	Michael Yin
+ADARC-Malaria Initiative	David Fidock
+ADARC-Malaria Initiative	Peter Kwong
+ADARC-Malaria Initiative	Larry Shapiro
+ADARC-Malaria Initiative	Zizhang Sheng
+ADARC-Malaria Initiative	Moriya Tsuji
+Malaria: Genetic determinants of resistance to antimalarials	David Fidock
+Malaria: Genetic determinants of resistance to antimalarials	Sachel Mok
+Malaria: Resistance to next generation frontline drugs	David Fidock
+Malaria: Resistance to next generation frontline drugs	Sachel Mok
+Malaria: Resistance to next generation frontline drugs	Jennifer Small-Saunders
+Malaria therapeutics and vaccine	David Fidock
+Malaria therapeutics and vaccine	Peter Kwong
+Malaria therapeutics and vaccine	Larry Shapiro
+Malaria therapeutics and vaccine	Zizhang Sheng
+Novel inhibitors for P. falciparum tRNA modifying enzymes	Hashim Al-Hashimi
+Novel inhibitors for P. falciparum tRNA modifying enzymes	Jennifer Small-Saunders
+SARS-CoV-2	Ho-Huang
+SARS-CoV-2	Yicheng Guo
+SARS-CoV-2	Peter Kwong
+SARS-CoV-2	Larry Shapiro
+SARS-CoV-2	Ian Mellis
+ADARC-LASV Initiative	Ho-Huang
+ADARC-LASV Initiative	Peter Kwong
+ADARC-LASV Initiative	Larry Shapiro
+ADARC-HSV-1 Entry Initiative	Ho-Huang
+ADARC-HSV-1 Entry Initiative	Steve Goff
+ADARC-HSV-1 Entry Initiative	Peter Kwong
+ADARC-HSV-1 Entry Initiative	Larry Shapiro
+ADARC-HSV-1 Entry Initiative	Zizhang Sheng
+ADARC-H5N1 Initiative	Ho-Huang
+ADARC-H5N1 Initiative	Steve Goff
+ADARC-H5N1 Initiative	Yicheng Guo
+ADARC-H5N1 Initiative	Peter Kwong
+ADARC-H5N1 Initiative	Larry Shapiro
+ADARC-H5N1 Initiative	Zizhang Sheng
+HIV Prevention and Cure (CUMC+Cornell CFAR)	Ho-Huang
+HIV Prevention and Cure (CUMC+Cornell CFAR)	Steve Goff
+HIV Prevention and Cure (CUMC+Cornell CFAR)	Yicheng Guo
+HIV Prevention and Cure (CUMC+Cornell CFAR)	Sho Iketani
+HIV Prevention and Cure (CUMC+Cornell CFAR)	Peter Kwong
+HIV Prevention and Cure (CUMC+Cornell CFAR)	Kathrine Meyers
+HIV Prevention and Cure (CUMC+Cornell CFAR)	Larry Shapiro
+HIV Prevention and Cure (CUMC+Cornell CFAR)	Zizhang Sheng
+HIV Prevention and Cure (CUMC+Cornell CFAR)	Magda Sobieszczyk
+HIV Prevention and Cure (CUMC+Cornell CFAR)	Masahiro Yamashita
+HIV Prevention and Cure (CUMC+Cornell CFAR)	Michael Yin
+ADARC-AI platforms	Ho-Huang
+ADARC-AI platforms	Yicheng Guo
+ADARC-AI platforms	Peter Kwong
+ADARC-AI platforms	Larry Shapiro
+TACK molecules and HIV cure studies	Ho-Huang
+TACK molecules and HIV cure studies	Steve Goff
+Tracking SARS-CoV-2 variants	Ho-Huang
+Tracking SARS-CoV-2 variants	Yicheng Guo
+Tracking SARS-CoV-2 variants	Ian Mellis
+Tracking SARS-CoV-2 variants	Michael Yin
+SARS-CoV-2 mAbs	Ho-Huang
+SARS-CoV-2 mAbs	Yicheng Guo
+SARS-CoV-2 mAbs	Ian Mellis
+SARS-CoV-2 mAbs	Peter Kwong
+SARS-CoV-2 mAbs	Larry Shapiro
+Engineered bispecific antibodies for HIV	Ho-Huang
+Engineered bispecific antibodies for HIV	Magda Sobieszczyk
+H5N1 monoclonal antibodies	Ho-Huang
+H5N1 monoclonal antibodies	Yicheng Guo
+H5N1 monoclonal antibodies	Peter Kwong
+H5N1 monoclonal antibodies	Larry Shapiro
+COVID-19 vaccines and immune imprinting	Ho-Huang
+COVID-19 vaccines and immune imprinting	Yicheng Guo
+COVID-19 vaccines and immune imprinting	Peter Kwong
+COVID-19 vaccines and immune imprinting	Michael Yin
+COVID-19 vaccines and immune imprinting	Ian Mellis
+Long COVID studies	Ho-Huang
+Long COVID studies	Michael Yin
+Long COVID studies	Peter Kwong
+Long COVID studies	Zizhang Sheng
+Preventing Parvovirus B19 Infections	Ian Mellis
+Preventing Parvovirus B19 Infections	Sho Iketani
+TRACE-Ex	Ian Mellis
+TRACE-Ex	Kathrine Meyers
+Optimization of genome engineering in Pf	Jennifer Small-Saunders
+Optimization of genome engineering in Pf	Sho Iketani
+The CONNECT Study	Kathrine Meyers
+The CONNECT Study	Michael Yin
+Antibodyomics	Larry Shapiro
+Antibodyomics	Yicheng Guo
+Antibodyomics	Peter Kwong
+Antibodyomics	Zizhang Sheng
+HIV-1 vaccine	Larry Shapiro
+HIV-1 vaccine	Yicheng Guo
+HIV-1 vaccine	Peter Kwong
+HIV-1 vaccine	Zizhang Sheng
+Anti-CD4 autoantibodies in HIV infection	Larry Shapiro
+Anti-CD4 autoantibodies in HIV infection	Peter Kwong
+Anti-CD4 autoantibodies in HIV infection	Zizhang Sheng
+Anti-CD4 autoantibodies in HIV infection	Michael Yin
+Quick and Accurate Measurements of HIV Broadly Neutralizing Antibody Susceptibility	Magda Sobieszczyk
+Quick and Accurate Measurements of HIV Broadly Neutralizing Antibody Susceptibility	Zizhang Sheng
+Quick and Accurate Measurements of HIV Broadly Neutralizing Antibody Susceptibility	Masahiro Yamashita
+Quick and Accurate Measurements of HIV Broadly Neutralizing Antibody Susceptibility	Michael Yin
+Comprehensive HIV Drug-Resistance Platform	Masahiro Yamashita
+Comprehensive HIV Drug-Resistance Platform	Sho Iketani
+Malaria: Genomic analysis of clinical isolates	Sachel Mok
+Malaria: Genomic analysis of clinical isolates	Zizhang Sheng

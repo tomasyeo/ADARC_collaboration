@@ -1,0 +1,10 @@
+.DS_Store
+__pycache__/
+.pytest_cache/
+.venv/
+*.pyc
+ADARC_PI_Collaborations_FY2026.xlsx
+project_participant_network.png
+project_participant_network.svg
+hiv_prevention_cure_participants.png
+hiv_prevention_cure_participants.svg
