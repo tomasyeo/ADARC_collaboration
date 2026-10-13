@@ -2,8 +2,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from app import build_graph, layout_for_graph, matrix_figure, network_figure
+from app import matrix_figure
 from data_model import SourceError, load_data
+from network_component import build_graph, graph_payload
 
 
 SOURCE = Path(__file__).resolve().parents[1] / "project_participant.txt"
@@ -38,13 +39,16 @@ class SourceAndViewTests(unittest.TestCase):
         self.assertEqual(graph.number_of_nodes(), len(data.projects) + len(data.participants))
         self.assertEqual(graph.number_of_edges(), len(raw_pairs))
 
-        positions = layout_for_graph(tuple(graph.nodes), tuple(graph.edges))
         selected = ("Project", data.projects.project.iloc[0])
-        for figure in (matrix_figure(data, selected), network_figure(graph, positions, selected, False)):
-            figure.to_plotly_json()
-        focused = network_figure(graph, positions, selected, True)
+        matrix_figure(data, selected).to_plotly_json()
+        payload = graph_payload(data, selected)
+        nodes = [element["data"] for element in payload["elements"] if "source" not in element["data"]]
+        edges = [element["data"] for element in payload["elements"] if "source" in element["data"]]
+        self.assertEqual({node["id"] for node in nodes}, set(graph.nodes))
+        self.assertEqual(len(edges), len(raw_pairs))
+        self.assertEqual(set(payload["positions"]), set(graph.nodes))
         selected_node = next(node for node in graph if graph.nodes[node]["label"] == selected[1])
-        self.assertEqual(len(focused.data[2].x) + len(focused.data[3].x), graph.degree[selected_node] + 1)
+        self.assertEqual(payload["selectedId"], selected_node)
 
     def test_row_order_and_source_update(self):
         lines = SOURCE.read_text(encoding="utf-8").splitlines()

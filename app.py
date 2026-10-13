@@ -4,18 +4,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import networkx as nx
 import plotly.graph_objects as go
 import streamlit as st
 
 from data_model import CollaborationData, SourceError, load_data
+from network_component import render_network
 
 
 SOURCE = Path(__file__).with_name("project_participant.txt")
-BLUE = "#176B91"
 TEAL = "#087F75"
 GOLD = "#D88900"
-MUTED = "#6C8193"
 
 
 def short_label(label: str, limit: int = 30) -> str:
@@ -77,100 +75,6 @@ def matrix_figure(data: CollaborationData, selection: tuple[str, str] | None) ->
     return figure
 
 
-def build_graph(data: CollaborationData) -> nx.Graph:
-    graph = nx.Graph()
-    for row in data.projects.itertuples(index=False):
-        graph.add_node(f"project:{row.project_id}", kind="Project", label=row.project)
-    for row in data.participants.itertuples(index=False):
-        graph.add_node(f"participant:{row.pi_id}", kind="PI", label=row.participant)
-    project_ids = dict(zip(data.projects.project, data.projects.project_id))
-    pi_ids = dict(zip(data.participants.participant, data.participants.pi_id))
-    for row in data.pairs.itertuples(index=False):
-        graph.add_edge(f"project:{project_ids[row.project]}", f"participant:{pi_ids[row.participant]}")
-    return graph
-
-
-@st.cache_data(show_spinner=False)
-def layout_for_graph(
-    nodes: tuple[str, ...], edges: tuple[tuple[str, str], ...]
-) -> dict[str, tuple[float, float]]:
-    """Cache by source relationships so selection never rearranges the graph."""
-    graph = nx.Graph()
-    graph.add_nodes_from(nodes)
-    graph.add_edges_from(edges)
-    positions = nx.spring_layout(graph, seed=13, iterations=250)
-    return {node: (float(x), float(y)) for node, (x, y) in positions.items()}
-
-
-def network_figure(
-    graph: nx.Graph,
-    positions: dict[str, tuple[float, float]],
-    selection: tuple[str, str] | None,
-    neighborhood: bool,
-) -> go.Figure:
-    selected_node = next(
-        (node for node, attrs in graph.nodes(data=True)
-         if selection and (attrs["kind"], attrs["label"]) == selection),
-        None,
-    )
-    visible = set(graph.nodes)
-    if neighborhood and selected_node:
-        visible = {selected_node, *graph.neighbors(selected_node)}
-    neighbors = set(graph.neighbors(selected_node)) if selected_node else set()
-
-    def edge_trace(active: bool) -> go.Scatter:
-        xs: list[float | None] = []
-        ys: list[float | None] = []
-        for left, right in graph.edges:
-            if left not in visible or right not in visible:
-                continue
-            if bool(selected_node and selected_node in (left, right)) != active:
-                continue
-            xs.extend([positions[left][0], positions[right][0], None])
-            ys.extend([positions[left][1], positions[right][1], None])
-        return go.Scatter(
-            x=xs, y=ys, mode="lines", hoverinfo="skip", showlegend=False,
-            line=dict(color=GOLD if active else MUTED, width=3 if active else 1),
-        )
-
-    figure = go.Figure()
-    figure.add_trace(edge_trace(False))
-    figure.add_trace(edge_trace(True))
-    for kind, symbol, color in (("Project", "square", BLUE), ("PI", "circle", TEAL)):
-        nodes = [node for node in graph if node in visible and graph.nodes[node]["kind"] == kind]
-        labels = [
-            short_label(graph.nodes[node]["label"], 16)
-            if kind == "PI" and (neighborhood or node == selected_node or node in neighbors)
-            else ""
-            for node in nodes
-        ]
-        figure.add_trace(go.Scatter(
-            x=[positions[node][0] for node in nodes],
-            y=[positions[node][1] for node in nodes],
-            mode="markers+text" if kind == "PI" else "markers",
-            text=labels if kind == "PI" else None,
-            textposition="top center",
-            customdata=[[graph.nodes[node]["label"], graph.degree[node]] for node in nodes],
-            hovertemplate="%{customdata[0]}<br>Recorded memberships: %{customdata[1]}<extra></extra>",
-            name=kind,
-            marker=dict(
-                symbol=symbol,
-                size=[19 if node == selected_node else 14 if node in neighbors else 10 for node in nodes],
-                color=color,
-                opacity=[1 if not selected_node or node == selected_node or node in neighbors else 0.55 for node in nodes],
-                line=dict(color="#FFFFFF", width=1),
-            ),
-        ))
-    figure.update_layout(
-        height=700, margin=dict(l=10, r=10, t=15, b=10),
-        hovermode="closest", dragmode="pan",
-        plot_bgcolor="#14202B", paper_bgcolor="#14202B", font=dict(color="#E7EEF5"),
-        legend=dict(orientation="h", y=1.04),
-        xaxis=dict(visible=False), yaxis=dict(visible=False, scaleanchor="x", scaleratio=1),
-    )
-    return figure
-
-
 def show_details(data: CollaborationData, selection: tuple[str, str] | None) -> None:
     st.subheader("Selection details")
     if selection is None:
@@ -187,6 +91,22 @@ def show_details(data: CollaborationData, selection: tuple[str, str] | None) -> 
         st.markdown(f"**PI:** {name}")
         st.write(f"{len(related)} projects")
         st.dataframe({"Project": related}, hide_index=True, width="stretch")
+
+
+def on_graph_selected() -> None:
+    component_state = st.session_state.get("cytoscape_network", {})
+    event = component_state.get("selected")
+    if event is None:
+        st.session_state["selected"] = None
+        return
+    if not isinstance(event, dict):
+        return
+    candidate = (event.get("kind"), event.get("name"))
+    data = load_data(SOURCE)
+    allowed = {("Project", name) for name in data.projects.project}
+    allowed.update(("PI", name) for name in data.participants.participant)
+    if candidate in allowed:
+        st.session_state["selected"] = candidate
 
 
 def main() -> None:
@@ -219,11 +139,8 @@ def main() -> None:
         st.write("**Teal cell:** recorded participation. **Gold outline:** selected project row or PI column. Hover for full names; the table below has every pair.")
         st.plotly_chart(matrix_figure(data, selection), width="stretch", config={"displaylogo": False})
     with network_tab:
-        st.write("**Square:** project. **Circle:** PI. **Line:** recorded participation. Gold lines connect the selection. Hover for full names. Positions show layout only, not collaboration strength.")
-        neighborhood = st.toggle("Show selected neighborhood only", value=False, disabled=selection is None)
-        graph = build_graph(data)
-        positions = layout_for_graph(tuple(graph.nodes), tuple(graph.edges))
-        st.plotly_chart(network_figure(graph, positions, selection, neighborhood), width="stretch", config={"displaylogo": False})
+        st.write("**Blue squares:** projects. **Teal circles:** PIs. **Lines:** recorded participation. Select a node to highlight its links. The two-column layout makes membership explicit; force layout positions are exploratory and do not measure collaboration strength.")
+        render_network(data, selection, on_graph_selected)
     with records_tab:
         st.write("Search and sort the complete set of recorded project–PI pairs.")
         st.dataframe(data.pairs.rename(columns={"project": "Project", "participant": "PI"}), hide_index=True, width="stretch")

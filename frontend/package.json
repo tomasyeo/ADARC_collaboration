@@ -1,0 +1,14 @@
+{
+  "name": "adarc-cytoscape-component",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build": "esbuild src/network.js --bundle --minify --format=esm --platform=browser --target=es2020 --outfile=dist/network.js"
+  },
+  "dependencies": {
+    "cytoscape": "3.34.3"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}
