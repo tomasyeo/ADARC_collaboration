@@ -242,8 +242,33 @@ export default function component({ parentElement, data, key, setTriggerValue })
 
   let previousWidth = canvas.clientWidth;
   let disposed = false;
+  let bounds = canvas.getBoundingClientRect();
+  let scrollFrame = null;
+  function refreshBounds() {
+    if (disposed || cy.destroyed()) return;
+    const next = canvas.getBoundingClientRect();
+    if (next.left !== bounds.left || next.top !== bounds.top ||
+        next.width !== bounds.width || next.height !== bounds.height) {
+      bounds = next;
+      cy.resize();
+    }
+  }
+  function onScroll() {
+    if (scrollFrame !== null) return;
+    scrollFrame = requestAnimationFrame(() => {
+      scrollFrame = null;
+      refreshBounds();
+    });
+  }
+  // Streamlit can scroll outside the graph's DOM ancestry, which Cytoscape does
+  // not observe. Refresh synchronously before its pointer handlers as a fallback.
+  const eventRoot = canvas.getRootNode();
+  window.addEventListener("scroll", onScroll, true);
+  if (eventRoot !== document) eventRoot.addEventListener("scroll", onScroll, true);
+  canvas.addEventListener("pointerdown", refreshBounds, true);
   const observer = new ResizeObserver(() => {
     if (disposed || cy.destroyed()) return;
+    bounds = canvas.getBoundingClientRect();
     cy.resize();
     const nextWidth = canvas.clientWidth;
     if (Math.abs(nextWidth - previousWidth) > 10) {
@@ -255,6 +280,10 @@ export default function component({ parentElement, data, key, setTriggerValue })
   return () => {
     disposed = true;
     observer.disconnect();
+    window.removeEventListener("scroll", onScroll, true);
+    if (eventRoot !== document) eventRoot.removeEventListener("scroll", onScroll, true);
+    canvas.removeEventListener("pointerdown", refreshBounds, true);
+    if (scrollFrame !== null) cancelAnimationFrame(scrollFrame);
     snapshot();
     cy.destroy();
   };
