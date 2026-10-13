@@ -28,6 +28,8 @@ npm ci
 npm run build
 ```
 
+Restart the Streamlit server after rebuilding so it registers the updated component bundle.
+
 Run the validation and reconciliation checks with:
 
 ```sh

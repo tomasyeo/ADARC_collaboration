@@ -44,8 +44,14 @@ class SourceAndViewTests(unittest.TestCase):
         payload = graph_payload(data, selected)
         nodes = [element["data"] for element in payload["elements"] if "source" not in element["data"]]
         edges = [element["data"] for element in payload["elements"] if "source" in element["data"]]
+        nodes_by_id = {node["id"]: node for node in nodes}
+        payload_pairs = {
+            (nodes_by_id[edge["source"]]["label"], nodes_by_id[edge["target"]]["label"])
+            for edge in edges
+        }
         self.assertEqual({node["id"] for node in nodes}, set(graph.nodes))
         self.assertEqual(len(edges), len(raw_pairs))
+        self.assertEqual(payload_pairs, raw_pairs)
         self.assertEqual(set(payload["positions"]), set(graph.nodes))
         selected_node = next(node for node in graph if graph.nodes[node]["label"] == selected[1])
         self.assertEqual(payload["selectedId"], selected_node)

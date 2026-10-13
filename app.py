@@ -83,12 +83,12 @@ def show_details(data: CollaborationData, selection: tuple[str, str] | None) -> 
     kind, name = selection
     if kind == "Project":
         related = data.pairs.loc[data.pairs.project == name, "participant"].tolist()
-        st.markdown(f"**Project:** {name}")
+        st.text(f"Project: {name}")
         st.write(f"{len(related)} participating PIs")
         st.dataframe({"PI": related}, hide_index=True, width="stretch")
     else:
         related = data.pairs.loc[data.pairs.participant == name, "project"].tolist()
-        st.markdown(f"**PI:** {name}")
+        st.text(f"PI: {name}")
         st.write(f"{len(related)} projects")
         st.dataframe({"Project": related}, hide_index=True, width="stretch")
 
@@ -101,7 +101,10 @@ def on_graph_selected() -> None:
         return
     if not isinstance(event, dict):
         return
-    candidate = (event.get("kind"), event.get("name"))
+    kind, name = event.get("kind"), event.get("name")
+    if not isinstance(kind, str) or not isinstance(name, str):
+        return
+    candidate = (kind, name)
     data = load_data(SOURCE)
     allowed = {("Project", name) for name in data.projects.project}
     allowed.update(("PI", name) for name in data.participants.participant)

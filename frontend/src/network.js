@@ -172,7 +172,7 @@ export default function component({ parentElement, data, key, setTriggerValue })
     mode = nextMode;
     recomputeButton.disabled = mode !== "force";
     if (mode === "bipartite") {
-      cy.layout({ name: "preset", positions: data.positions, fit: true, padding: 45, animate: true, animationDuration: 350 }).run();
+      cy.layout({ name: "preset", positions: data.positions, fit: true, padding: 45, animate: false }).run();
     } else {
       cy.layout({
         name: "cose", randomize: true, animate: false, fit: true, padding: 55,
@@ -231,7 +231,7 @@ export default function component({ parentElement, data, key, setTriggerValue })
   cy.on("mousemove", "node", (event) => {
     const point = event.renderedPosition;
     tooltip.style.left = `${Math.max(8, Math.min(point.x + 20, canvas.clientWidth - tooltip.offsetWidth - 8))}px`;
-    tooltip.style.top = `${Math.max(8, point.y + 16)}px`;
+    tooltip.style.top = `${Math.max(8, Math.min(point.y + 16, canvas.clientHeight - tooltip.offsetHeight - 8))}px`;
   });
   cy.on("mouseout", "node", () => { tooltip.style.display = "none"; });
   cy.on("dragfree", "node", () => {
