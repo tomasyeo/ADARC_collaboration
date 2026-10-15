@@ -10,6 +10,7 @@ import networkx as nx
 import streamlit as st
 
 from data_model import CollaborationData
+from frontend_assets import register_frontend
 
 
 ROOT = Path(__file__).parent
@@ -106,14 +107,9 @@ HTML = """
 
 
 def _register_component():
-    bundle = (FRONTEND / "dist" / "network.js").read_text(encoding="utf-8")
-    css = (FRONTEND / "network.css").read_text(encoding="utf-8")
-    return st.components.v2.component(
-        name="adarc_cytoscape_network", html=HTML, css=css, js=bundle,
+    return register_frontend(
+        "adarc_cytoscape_network", HTML, FRONTEND, "network.js",
     )
-
-
-NETWORK_COMPONENT = None
 
 
 def _on_view_change() -> None:
@@ -123,12 +119,10 @@ def _on_view_change() -> None:
 
 
 def render_network(data: CollaborationData, selection: tuple[str, str] | None, on_select):
-    global NETWORK_COMPONENT
-    if NETWORK_COMPONENT is None:
-        NETWORK_COMPONENT = _register_component()
+    component = _register_component()
     payload = graph_payload(data, selection)
     payload["savedView"] = st.session_state.get("project_graph_view")
-    return NETWORK_COMPONENT(
+    return component(
         data=payload, key="cytoscape_network",
         on_selected_change=on_select, on_view_change=_on_view_change,
         width="stretch",

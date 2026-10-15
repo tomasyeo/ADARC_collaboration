@@ -1,5 +1,5 @@
 import cytoscape from "cytoscape";
-import { selectionNeighborhood } from "./project_selection.mjs";
+import { selectionNeighborhood, mobileFocusPositions } from "./project_selection.mjs";
 
 function sameGraph(previous, signature) {
   return previous?.signature === signature;
@@ -27,20 +27,20 @@ function styleSheet() {
       "curve-style": "straight",
     } },
     { selector: "node.selected", style: {
-      "width": 28, "height": 28, "border-width": 4,
+      "width": 28, "height": 28, "border-width": 2,
       "border-color": "#F0A727", "z-index": 10,
     } },
     { selector: "node.neighbor", style: {
-      "border-width": 3, "border-color": "#F0A727", "z-index": 8,
+      "border-width": 2, "border-color": "#F0A727", "z-index": 8,
     } },
     { selector: "edge.active", style: {
-      "width": 3, "line-color": "#F0A727", "opacity": 1, "z-index": 9,
+      "width": 2, "line-color": "#F0A727", "opacity": 1, "z-index": 9,
     } },
     { selector: "node.secondary", style: {
-      "border-width": 2.4, "border-color": "#B39DDB", "opacity": 0.9, "z-index": 6,
+      "border-width": 1.5, "border-color": "#B39DDB", "opacity": 0.9, "z-index": 6,
     } },
     { selector: "edge.secondary", style: {
-      "width": 2.4, "line-color": "#B39DDB", "opacity": 0.9, "z-index": 5,
+      "width": 1.5, "line-color": "#B39DDB", "opacity": 0.9, "z-index": 5,
     } },
     { selector: "node.mobile-focus", style: {
       "text-halign": "center", "text-valign": "bottom", "text-margin-x": 0,
@@ -140,20 +140,13 @@ export default function component({ parentElement, data, setStateValue, setTrigg
     }
     if (!mobileFocusActive) overviewPositions = positionsNow();
     mobileFocusActive = true;
-    const neighbors = selectionNeighborhood(selected, revealFellowPis).expanded.nodes().not(selected).toArray()
-      .sort((a, b) => a.data("label").localeCompare(b.data("label")));
-    const dense = neighbors.length > 2;
-    const rowGap = neighbors.length > 8 ? 75 : 105;
+    const { positions, dense } = mobileFocusPositions(selected, revealFellowPis);
     cy.nodes().removeClass("mobile-focus mobile-dense");
     selected.addClass("mobile-focus");
-    selected.position({ x: 180, y: 25 });
-    neighbors.forEach((node, index) => {
+    placeNodes(positions);
+    cy.nodes().filter(node => node.id() !== selectedId && positions[node.id()]).forEach((node) => {
       node.addClass("mobile-focus");
       if (dense) node.addClass("mobile-dense");
-      node.position({
-        x: dense ? (index % 2 === 0 ? 90 : 270) : 180,
-        y: 135 + Math.floor(index / (dense ? 2 : 1)) * rowGap,
-      });
     });
   }
 
@@ -241,18 +234,23 @@ export default function component({ parentElement, data, setStateValue, setTrigg
     const node = event.target;
     selectedId = node.id();
     applySelection();
-    publishView();
+    if (focused) fitVisible();
+    if (publishTimer !== null) clearTimeout(publishTimer);
+    publishTimer = null;
     setTriggerValue("selected", {
-      kind: node.data("kind"), name: node.data("label"),
+      kind: node.data("kind"), name: node.data("label"), view: snapshot(),
     });
   });
   cy.on("tap", (event) => {
     if (event.target !== cy) return;
+    const wasFocused = focused;
     selectedId = null;
     focused = false;
     applySelection();
-    publishView();
-    setTriggerValue("selected", null);
+    if (wasFocused) fitVisible();
+    if (publishTimer !== null) clearTimeout(publishTimer);
+    publishTimer = null;
+    setTriggerValue("selected", { kind: "Clear", view: snapshot() });
   });
   cy.on("mouseover", "node", (event) => {
     const node = event.target;

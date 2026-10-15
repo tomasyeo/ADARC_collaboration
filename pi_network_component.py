@@ -10,6 +10,7 @@ from pathlib import Path
 import streamlit as st
 
 from data_model import CollaborationData
+from frontend_assets import register_frontend
 from pi_projection import PIProjection
 
 
@@ -68,14 +69,9 @@ HTML = """
 
 
 def _register_component():
-    return st.components.v2.component(
-        name="adarc_pi_shared_network", html=HTML,
-        css=(FRONTEND / "network.css").read_text(encoding="utf-8"),
-        js=(FRONTEND / "dist" / "pi_network.js").read_text(encoding="utf-8"),
+    return register_frontend(
+        "adarc_pi_shared_network", HTML, FRONTEND, "pi_network.js",
     )
-
-
-PI_NETWORK_COMPONENT = None
 
 
 def _on_view_change() -> None:
@@ -85,12 +81,10 @@ def _on_view_change() -> None:
 
 
 def render_pi_network(data: CollaborationData, projection: PIProjection, selection, on_select):
-    global PI_NETWORK_COMPONENT
-    if PI_NETWORK_COMPONENT is None:
-        PI_NETWORK_COMPONENT = _register_component()
+    component = _register_component()
     payload = pi_graph_payload(data, projection, selection)
     payload["savedView"] = st.session_state.get("pi_graph_view")
-    return PI_NETWORK_COMPONENT(
+    return component(
         data=payload, key="cytoscape_pi_network",
         on_selected_change=on_select, on_view_change=_on_view_change,
         width="stretch",

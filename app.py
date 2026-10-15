@@ -131,6 +131,12 @@ def on_graph_selected() -> None:
     if event is None:
         st.session_state["pending_selection"] = None
     elif isinstance(event, dict):
+        view = event.get("view")
+        if isinstance(view, dict):
+            st.session_state["project_graph_view"] = view
+        if event.get("kind") == "Clear":
+            st.session_state["pending_selection"] = None
+            return
         kind, name = event.get("kind"), event.get("name")
         if isinstance(kind, str) and isinstance(name, str):
             st.session_state["pending_selection"] = (kind, name)
