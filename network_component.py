@@ -97,11 +97,16 @@ HTML = """
     <button class="focus-selection" type="button" aria-pressed="false">Focus selection</button>
     <button class="reveal-fellow-pis" type="button" aria-pressed="false" title="Select a PI to reveal other PIs on their projects">Reveal fellow PIs</button>
   </div>
+  <div class="network-legend" role="group" aria-label="Network highlight legend">
+    <span><i class="legend-line legend-direct" aria-hidden="true"></i>Direct participation</span>
+    <span><i class="legend-line legend-fellow" aria-hidden="true"></i>Fellow PIs through shared projects</span>
+    <span><i class="legend-line legend-normal" aria-hidden="true"></i>Unhighlighted</span>
+  </div>
   <div class="network-frame">
     <div class="network-canvas" role="img" aria-label="Interactive project and PI membership network"></div>
-    <div class="network-tooltip" role="tooltip"></div>
+    <div class="network-tooltip project-network-tooltip" role="tooltip"></div>
   </div>
-  <p class="network-help">Orange: selected node and direct memberships. Reveal fellow PIs adds other PIs on the selected PI’s projects, with lavender connections. Drag nodes to adjust the view; use the searchable selector and records table for full keyboard access.</p>
+  <p class="network-help">Enable Reveal fellow PIs, then hover over a lavender PI for the shared-project count and full titles. Drag nodes to adjust the view; use the searchable selector and records table for full keyboard access.</p>
 </div>
 """
 

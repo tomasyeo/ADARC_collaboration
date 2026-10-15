@@ -19,8 +19,8 @@ Agreed interface decisions are the **PI shared projects** page name, a matrix
 opening on both pages, all PI–PI ties visible by default, a PI selection that
 follows the user between pages, and one searchable **Find a PI or PI pair**
 control on the new page. The agreed performance approach is one validated TSV
-read per rerun, page-specific derivation, lazy tab rendering, and no cache
-initially. The prototype illustrated the selected-pair state; the implemented
+read per rerun, page-specific derivation, lazy tab rendering, and no source-data cache
+initially. Frontend component registration is separately cached by asset content; it does not cache TSV data or the PI projection. The prototype illustrated the selected-pair state; the implemented
 page must show the complete current source.
 
 The current TSV has 29 projects, 18 PIs, and 107 participation rows. Its
@@ -185,8 +185,8 @@ and raw number of distinct projects listing that PI. A line's tooltip shows
 both full names, their raw shared-project count, and a prompt to select it
 for the project titles. An off-diagonal matrix cell shows both full names and
 their shared-project count; a diagonal cell shows the full name and that PI's
-own project count, explicitly labeled as a total. Keep hover content short:
-do not put a long project-title list over the graph. Selecting a line opens
+own project count, explicitly labeled as a total. Keep hover content short on this PI shared projects page:
+do not put a long project-title list over this graph. The separate Projects and PIs page now provides shared-title hover evidence for revealed fellow PIs, as described in the [project network plan](matrix-network-app-plan.md). Selecting a line opens
 the complete shared-project title list in a persistent detail area. An
 off-diagonal cell does the same if cell selection proves reliable in the
 pinned versions. Selecting a circle opens that PI's projects and its other

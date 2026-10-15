@@ -2,6 +2,8 @@
 
 This Streamlit app reads `data_source/project_participant.txt` and offers two pages. **Projects and PIs** shows the source participation pairs in a Plotly matrix, Cytoscape.js network, and full record table. **PI shared projects** shows each PI's project count and the number of projects listed for each PI pair, with a count matrix, network, and complete source-title evidence for selections. A PI selection follows you between pages.
 
+On **Projects and PIs → Network**, select a PI and enable **Reveal fellow PIs** to highlight the other PIs listed on that PI’s projects. Orange marks direct participation; lavender marks the second level. Hover over a lavender PI for its shared-project count and full source titles. The legend sits above the graph, and **Focus selection** includes the revealed group.
+
 For code ownership, data edits, frontend builds, and review checks, see the [development guide](docs/development.md).
 
 The maintained source is a UTF-8 tab-separated file with exactly these columns:
@@ -38,21 +40,21 @@ before using `./appctl start`.
 The prebuilt Cytoscape browser bundles are committed in `frontend/dist/`, so deployment only needs the Python dependencies. To change either network component, use Node.js and rebuild before committing:
 
 ```sh
-cd frontend
-npm ci
-npm run build
+npm --prefix frontend ci
+npm --prefix frontend run build
 ```
 
-Restart the Streamlit server after rebuilding so it registers the updated component bundles.
+After rebuilding, reload the browser or trigger an app rerun to register the updated assets. A server restart is not required. Both network components reuse their registration when the bundled content is unchanged.
 
 Run the validation and reconciliation checks with:
 
 ```sh
 .venv/bin/python -m unittest discover -s tests -v
+npm --prefix frontend test
 ```
 
 ## Deploy
 
-Keep `app.py`, `data_model.py`, `pi_projection.py`, both network component modules, `data_source/project_participant.txt`, `requirements.txt`, and both files in `frontend/dist/` in the public GitHub repository. Connect that repository to Streamlit Community Cloud and choose `app.py` as the entry point. The historical workbook and prototype images are excluded by `.gitignore`; the app does not use them. The public repository and deployed app will expose the TSV's project titles and PI names.
+Keep `app.py`, `data_model.py`, `pi_projection.py`, both network component modules, `frontend_assets.py`, `frontend/network.css`, `data_source/project_participant.txt`, `requirements.txt`, and both files in `frontend/dist/` in the public GitHub repository. Connect that repository to Streamlit Community Cloud and choose `app.py` as the entry point. The historical workbook and prototype images are excluded by `.gitignore`; the app does not use them. The public repository and deployed app will expose the TSV's project titles and PI names.
 
 This view records co-participation in a project. It does not imply that two PIs directly collaborated with one another or identify a project lead.

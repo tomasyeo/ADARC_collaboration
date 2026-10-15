@@ -1,5 +1,5 @@
 import cytoscape from "cytoscape";
-import { selectionNeighborhood, mobileFocusPositions } from "./project_selection.mjs";
+import { selectionNeighborhood, mobileFocusPositions, sharedProjectTitles } from "./project_selection.mjs";
 
 function sameGraph(previous, signature) {
   return previous?.signature === signature;
@@ -252,16 +252,25 @@ export default function component({ parentElement, data, setStateValue, setTrigg
     publishTimer = null;
     setTriggerValue("selected", { kind: "Clear", view: snapshot() });
   });
-  cy.on("mouseover", "node", (event) => {
-    const node = event.target;
-    tooltip.textContent = `${node.data("kind")}: ${node.data("label")} · ${node.degree()} memberships`;
-    tooltip.style.display = "block";
-  });
-  cy.on("mousemove", "node", (event) => {
+  function positionTooltip(event) {
     const point = event.renderedPosition;
     tooltip.style.left = `${Math.max(8, Math.min(point.x + 20, canvas.clientWidth - tooltip.offsetWidth - 8))}px`;
     tooltip.style.top = `${Math.max(8, Math.min(point.y + 16, canvas.clientHeight - tooltip.offsetHeight - 8))}px`;
+  }
+  cy.on("mouseover", "node", (event) => {
+    const node = event.target;
+    tooltip.textContent = `${node.data("kind")}: ${node.data("label")} · ${node.degree()} memberships`;
+    if (node.hasClass("secondary")) {
+      const selected = selectedId ? cy.$id(selectedId) : cy.collection();
+      const titles = sharedProjectTitles(selected, node);
+      if (titles.length) {
+        tooltip.textContent += `\n\nShares ${titles.length} project${titles.length === 1 ? "" : "s"} with ${selected.data("label")}:\n${titles.map(title => `• ${title}`).join("\n")}`;
+      }
+    }
+    tooltip.style.display = "block";
+    positionTooltip(event);
   });
+  cy.on("mousemove", "node", positionTooltip);
   cy.on("mouseout", "node", () => { tooltip.style.display = "none"; });
   cy.on("dragfree", "node", () => {
     if (!mobileFocusActive) overviewPositions = positionsNow();

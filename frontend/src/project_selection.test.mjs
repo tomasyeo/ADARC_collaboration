@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import cytoscape from "cytoscape";
-import { selectionNeighborhood, mobileFocusPositions } from "./project_selection.mjs";
+import { selectionNeighborhood, mobileFocusPositions, sharedProjectTitles } from "./project_selection.mjs";
 
 test("PI expansion includes shared participation but stops before unrelated projects", () => {
   const cy = cytoscape({ headless: true, elements: [
@@ -22,6 +22,27 @@ test("PI expansion includes shared participation but stops before unrelated proj
     const project = selectionNeighborhood(cy.$id("x"), true);
     assert.deepEqual(ids(project.expanded), ["a", "ax", "b", "bx", "x"]);
     assert.equal(project.secondary.length, 0);
+  } finally {
+    cy.destroy();
+  }
+});
+
+test("hover evidence contains only exact titles shared by the two PIs", () => {
+  const cy = cytoscape({ headless: true, elements: [
+    ...["a", "b", "c"].map(id => ({ data: { id, label: id, kind: "PI" } })),
+    ...[["x", "Zeta — full project title"], ["y", "Alpha <literal> & project"], ["z", "Other project"]]
+      .map(([id, label]) => ({ data: { id, label, kind: "Project" } })),
+    ...[["a", "x"], ["a", "y"], ["b", "x"], ["b", "y"], ["b", "z"], ["c", "z"]]
+      .map(([source, target]) => ({ data: { id: source + target, source, target } })),
+  ] });
+  try {
+    assert.deepEqual(sharedProjectTitles(cy.$id("a"), cy.$id("b")),
+      ["Alpha <literal> & project", "Zeta — full project title"]);
+    assert.deepEqual(sharedProjectTitles(cy.$id("b"), cy.$id("c")), ["Other project"]);
+    assert.deepEqual(sharedProjectTitles(cy.$id("a"), cy.$id("c")), []);
+    assert.deepEqual(sharedProjectTitles(cy.$id("a"), cy.$id("a")), []);
+    assert.deepEqual(sharedProjectTitles(cy.$id("a"), cy.$id("x")), []);
+    assert.deepEqual(sharedProjectTitles(cy.collection(), cy.$id("a")), []);
   } finally {
     cy.destroy();
   }
