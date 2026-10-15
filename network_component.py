@@ -94,12 +94,13 @@ HTML = """
     <button class="reset-layout" type="button">Reset positions</button>
     <button class="fit-network" type="button">Fit to view</button>
     <button class="focus-selection" type="button" aria-pressed="false">Focus selection</button>
+    <button class="reveal-fellow-pis" type="button" aria-pressed="false" title="Select a PI to reveal other PIs on their projects">Reveal fellow PIs</button>
   </div>
   <div class="network-frame">
     <div class="network-canvas" role="img" aria-label="Interactive project and PI membership network"></div>
     <div class="network-tooltip" role="tooltip"></div>
   </div>
-  <p class="network-help">Select a node to highlight its memberships. Drag nodes to adjust the view; use the searchable selector and records table for full keyboard access.</p>
+  <p class="network-help">Orange: selected node and direct memberships. Reveal fellow PIs adds other PIs on the selected PI’s projects, with lavender connections. Drag nodes to adjust the view; use the searchable selector and records table for full keyboard access.</p>
 </div>
 """
 

@@ -37,13 +37,15 @@
   outline-offset: 2px;
 }
 
-.network-toolbar .focus-selection[aria-pressed="true"] {
+.network-toolbar .focus-selection[aria-pressed="true"],
+.network-toolbar .reveal-fellow-pis[aria-pressed="true"] {
   background: #f0a727;
   border-color: #f0a727;
   color: #14202b;
 }
 
-.network-toolbar .focus-selection:disabled {
+.network-toolbar .focus-selection:disabled,
+.network-toolbar .reveal-fellow-pis:disabled {
   cursor: not-allowed;
   opacity: 0.55;
 }

@@ -1,4 +1,5 @@
 import cytoscape from "cytoscape";
+import { selectionNeighborhood } from "./project_selection.mjs";
 
 function sameGraph(previous, signature) {
   return previous?.signature === signature;
@@ -35,6 +36,12 @@ function styleSheet() {
     { selector: "edge.active", style: {
       "width": 3, "line-color": "#F0A727", "opacity": 1, "z-index": 9,
     } },
+    { selector: "node.secondary", style: {
+      "border-width": 2.4, "border-color": "#B39DDB", "opacity": 0.9, "z-index": 6,
+    } },
+    { selector: "edge.secondary", style: {
+      "width": 2.4, "line-color": "#B39DDB", "opacity": 0.9, "z-index": 5,
+    } },
     { selector: "node.mobile-focus", style: {
       "text-halign": "center", "text-valign": "bottom", "text-margin-x": 0,
       "text-margin-y": 8, "text-wrap": "ellipsis", "text-max-width": 280,
@@ -53,12 +60,14 @@ export default function component({ parentElement, data, setStateValue, setTrigg
   const resetButton = root.querySelector(".reset-layout");
   const fitButton = root.querySelector(".fit-network");
   const focusButton = root.querySelector(".focus-selection");
+  const fellowPisButton = root.querySelector(".reveal-fellow-pis");
   const tooltip = root.querySelector(".network-tooltip");
   const saved = data.savedView;
   const restore = sameGraph(saved, data.signature) ? saved : null;
   const sameViewport = restore && Math.abs((restore.width ?? 0) - canvas.clientWidth) < 10;
   let mode = restore?.mode ?? "bipartite";
   let focused = restore?.focused ?? false;
+  let revealFellowPis = restore?.revealFellowPis ?? false;
   let selectedId = data.selectedId ?? null;
   let overviewPositions = restore?.overviewPositions ?? restore?.positions ?? data.positions;
   let mobileFocusActive = restore?.mobileFocusActive ?? false;
@@ -90,7 +99,7 @@ export default function component({ parentElement, data, setStateValue, setTrigg
     const positions = {};
     cy.nodes().forEach((node) => { positions[node.id()] = node.position(); });
     const state = {
-      signature: data.signature, mode, focused, selectedId, positions,
+      signature: data.signature, mode, focused, revealFellowPis, selectedId, positions,
       overviewPositions, mobileFocusActive,
       zoom: cy.zoom(), pan: cy.pan(), width: canvas.clientWidth,
     };
@@ -131,7 +140,7 @@ export default function component({ parentElement, data, setStateValue, setTrigg
     }
     if (!mobileFocusActive) overviewPositions = positionsNow();
     mobileFocusActive = true;
-    const neighbors = selected.neighborhood("node").toArray()
+    const neighbors = selectionNeighborhood(selected, revealFellowPis).expanded.nodes().not(selected).toArray()
       .sort((a, b) => a.data("label").localeCompare(b.data("label")));
     const dense = neighbors.length > 2;
     const rowGap = neighbors.length > 8 ? 75 : 105;
@@ -149,21 +158,24 @@ export default function component({ parentElement, data, setStateValue, setTrigg
   }
 
   function applySelection() {
-    cy.elements().removeClass("selected neighbor active muted hidden");
+    cy.elements().removeClass("selected neighbor active secondary muted hidden");
     const selected = selectedId ? cy.$id(selectedId) : cy.collection();
     const hasSelection = selected.length === 1;
+    fellowPisButton.disabled = !hasSelection || selected.data("kind") !== "PI";
+    fellowPisButton.setAttribute("aria-pressed", String(revealFellowPis));
     if (!hasSelection) {
       focused = false;
       syncFocusButton(false);
       return;
     }
     syncFocusButton(true);
-    const neighborhood = selected.closedNeighborhood();
+    const { expanded: neighborhood, secondary } = selectionNeighborhood(selected, revealFellowPis);
     cy.elements().addClass("muted");
     neighborhood.removeClass("muted");
     selected.addClass("selected");
     selected.neighborhood("node").addClass("neighbor");
     selected.connectedEdges().addClass("active");
+    secondary.addClass("secondary");
     if (focused) cy.elements().not(neighborhood).addClass("hidden");
   }
 
@@ -215,6 +227,13 @@ export default function component({ parentElement, data, setStateValue, setTrigg
     focused = !focused;
     applySelection();
     fitVisible();
+    publishView();
+  };
+  fellowPisButton.onclick = () => {
+    tooltip.style.display = "none";
+    revealFellowPis = !revealFellowPis;
+    applySelection();
+    if (focused) fitVisible();
     publishView();
   };
 

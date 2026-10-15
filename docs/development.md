@@ -83,7 +83,7 @@ cd ..
 
 Commit frontend source and both generated files in `frontend/dist/`. Streamlit registers the bundled JavaScript when its Python process starts, so restart the Streamlit server after rebuilding. Streamlit deployment uses the committed bundles and does not need a Node build step.
 
-The network defaults to two columns, with projects and PIs ordered to reduce crossings. The force layout and its recompute button provide an exploratory arrangement; distance does not measure collaboration strength. The focus button shows a selected node and its immediate neighbors. Each component sends layout and viewport snapshots to separate Streamlit session-state keys and receives them when remounted; a changed source signature invalidates the saved state. On narrow screens, a focused neighborhood gets a compact arrangement. The frontend refreshes Cytoscape's cached canvas bounds when the page moves and immediately before a pointer click, so page scrolling does not offset node hit testing. These refreshes preserve the current zoom and pan.
+The network defaults to two columns, with projects and PIs ordered to reduce crossings. The force layout and its recompute button provide an exploratory arrangement; distance does not measure collaboration strength. The focus button shows a selected node and its immediate neighbors. On the Projects and PIs page, “Reveal fellow PIs” optionally expands a PI selection through its projects to their other participating PIs. Direct memberships stay orange; second-level PI borders and participation edges use lavender (#B39DDB) at 90% opacity, with 2.4 px borders and lines. The toggle starts off, is disabled for project or empty selections, and retains its preference with the saved view. It works in both layouts and includes the expanded group in focus mode, including on narrow screens. It never expands through fellow PIs to their other projects. Each component sends layout and viewport snapshots to separate Streamlit session-state keys and receives them when remounted; a changed source signature invalidates the saved state. On narrow screens, a focused neighborhood gets a compact arrangement. The frontend refreshes Cytoscape's cached canvas bounds when the page moves and immediately before a pointer click, so page scrolling does not offset node hit testing. These refreshes preserve the current zoom and pan.
 
 The PI network defaults to a circular overview, so each of the 18 source PIs has a distinct starting position. Recompute runs a force layout with a zoom cap; reset returns to the circle. Circle area increases with raw PI project count. Every nonzero pair appears as an edge; one-project edges are pale, and repeated shared projects receive more contrast and width. Selecting an edge shows all supporting titles below the graph. A graph click sends its selection and current layout snapshot in one event, so the selection rerun restores the positions and viewport from that same click. The graph also retains its view across tab re-entry for an unchanged projection. Its page has a separate Cytoscape key and saved view, so it cannot inherit the project graph's layout.
 
@@ -93,6 +93,7 @@ Run the automated checks:
 
 ```sh
 .venv/bin/python -m unittest discover -s tests -v
+npm --prefix frontend test
 git diff --check
 ```
 
@@ -100,6 +101,7 @@ The tests check source validation, row-order independence, a sample source updat
 
 - Selecting a project and a PI updates the matrix highlight, network highlight, and detail table.
 - Clicking a graph node updates the shared selector; clearing selection restores the full view.
+- Select a PI and toggle “Reveal fellow PIs”: verify second-level PIs and edges against the source, direct edges remain orange, focus includes the expanded group, and unrelated projects stay muted or hidden. Repeat with a project selection (toggle disabled), after a selector rerun, and on a narrow screen.
 - After scrolling the page around the graph, click a colored node and confirm its highlight and selector both update. Repeat after zooming, panning, recomputing the force layout, and dragging a node.
 - Focus toggles on and off, and both layout choices, force recompute, reset, drag, zoom, and fit still work.
 - Long names are available in the selector, hover tooltip, or detail table; inspect the view at a narrow width.
